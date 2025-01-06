@@ -1,11 +1,11 @@
-name: Create Google Calendar Event
+name: Sync Google Calendar Event
 
 on:
   push:
     branches:
       - main
   schedule:
-      - cron: "*/5 * * * *" # Runs every 5 minutes
+    - cron: "*/5 * * * *" # Runs every 5 minutes
 #on:
 #  schedule:
 #    - cron: "*/5 * * * *" # Runs every 5 minutes
