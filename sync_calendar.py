@@ -39,10 +39,19 @@ def fetch_notion_events():
     for result in data.get("results", []):
         props = result.get("properties", {})
         title = props.get("Name", {}).get("title", [{}])[0].get("text", {}).get("content", "No Title")
-        date = props.get("Date", {}).get("date", {}).get("start")
+        date = props.get("due date", {}).get("date", {}).get("start")  # Updated key to match "due date"
+        description = ""
+        rich_text = props.get("description", {}).get("rich_text", [])
+        if rich_text:
+            description = rich_text[0].get("text", {}).get("content", "")
 
         if title and date:
-            events.append({"summary": title, "start": date, "end": date})
+            events.append({
+                "summary": title,
+                "start": date,
+                "end": date,
+                "description": description
+            })
     return events
 
 # Post events to Google Calendar
@@ -51,11 +60,12 @@ def post_to_google_calendar(events):
     for event in events:
         event_body = {
             "summary": event["summary"],
-            "start": {"dateTime": event["start"], "timeZone": "UTC"},
-            "end": {"dateTime": event["end"], "timeZone": "UTC"},
+            "description": event["description"],  # Include description in event body
+            "start": {"dateTime": f"{event['start']}T00:00:00Z", "timeZone": "UTC"},
+            "end": {"dateTime": f"{event['end']}T23:59:59Z", "timeZone": "UTC"},
         }
         service.events().insert(calendarId=GOOGLE_CALENDAR_ID, body=event_body).execute()
-        print(f"Event '{event['summary']}' added to Google Calendar.")
+        print(f"Event '{event['summary']}' added to Google Calendar with description.")
 
 # Main script execution
 if __name__ == "__main__":
