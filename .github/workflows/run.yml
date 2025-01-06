@@ -1,8 +1,8 @@
 name: Create Google Calendar Event
 
 on:
-  push
-  
+  schedule:
+   - cron: "*/5 * * * *" # Runs every 5 minutes
 #on:
 #  schedule:
 #    - cron: "*/5 * * * *" # Runs every 5 minutes
