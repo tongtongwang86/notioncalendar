@@ -1,0 +1,24 @@
+name: Create Google Calendar Event on Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  create_calendar_event:
+    name: Create Google Calendar Event
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Post to Google Calendar
+        uses: stancic/create-google-calendar-event@v1
+        with:
+          service_account_client_email: ${{ secrets.SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          service_account_client_private_key: ${{ secrets.SERVICE_ACCOUNT_CLIENT_PRIVATE_KEY }}
+          calendar_id: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          summary: ${{ github.event.release.name }}
+          description: ${{ github.event.release.body }}
