@@ -3,7 +3,7 @@ import os
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 import requests
-
+ 
 # Load environment variables
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
