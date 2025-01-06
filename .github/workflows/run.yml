@@ -1,9 +1,7 @@
 name: Create Google Calendar Event on Release
 
 on:
-  release:
-    types:
-      - published
+  push
 
 jobs:
   create_calendar_event:
