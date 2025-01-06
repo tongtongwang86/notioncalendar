@@ -6,31 +6,33 @@ on:
 #on:
 #  schedule:
 #    - cron: "*/5 * * * *" # Runs every 5 minutes
+
 jobs:
-  sync_calendar:
-    name: Sync Calendar
+  sync-calendar:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      # Step 1: Check out the repository
+      - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      # Step 2: Set up Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "3.10"  # Use a compatible Python version
 
-      - name: Install Dependencies
+      # Step 3: Install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Notion to Google Calendar Sync
+      # Step 4: Run the Python script
+      - name: Run sync_calendar.py
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.SERVICE_ACCOUNT_CLIENT_EMAIL }}
-          GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.SERVICE_ACCOUNT_CLIENT_PRIVATE_KEY }}
-        run: |
-          python sync_calendar.py
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: python sync_calendar.py
