@@ -18,5 +18,5 @@ jobs:
           service_account_client_email: ${{ secrets.SERVICE_ACCOUNT_CLIENT_EMAIL }}
           service_account_client_private_key: ${{ secrets.SERVICE_ACCOUNT_CLIENT_PRIVATE_KEY }}
           calendar_id: ${{ secrets.GOOGLE_CALENDAR_ID }}
-          summary: ${{ github.event.release.name }}
-          description: ${{ github.event.release.body }}
+          summary: "hoi"
+          description: "body"
