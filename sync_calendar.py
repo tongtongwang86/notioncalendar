@@ -54,10 +54,30 @@ def fetch_notion_events():
             })
     return events
 
-# Post events to Google Calendar
+# Fetch existing events from Google Calendar
+def fetch_google_calendar_events():
+    service = get_google_calendar_service()
+    events_result = service.events().list(calendarId=GOOGLE_CALENDAR_ID).execute()
+    google_events = events_result.get("items", [])
+    existing_events = set()
+
+    for event in google_events:
+        summary = event.get("summary")
+        start_date = event.get("start", {}).get("dateTime", "").split("T")[0]
+        if summary and start_date:
+            existing_events.add((summary, start_date))
+    return existing_events
+
+# Post events to Google Calendar, avoiding duplicates
 def post_to_google_calendar(events):
     service = get_google_calendar_service()
+    existing_events = fetch_google_calendar_events()
     for event in events:
+        # Check if event already exists in Google Calendar
+        if (event["summary"], event["start"]) in existing_events:
+            print(f"Event '{event['summary']}' already exists. Skipping...")
+            continue
+
         event_body = {
             "summary": event["summary"],
             "description": event["description"],  # Include description in event body
