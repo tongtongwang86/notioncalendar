@@ -1,22 +1,37 @@
-name: Create Google Calendar Event on Release
+name: Create Google Calendar Event
 
 on:
   push
+  
+#on:
+#  schedule:
+#    - cron: "*/5 * * * *" # Runs every 5 minutes
 
 jobs:
-  create_calendar_event:
-    name: Create Google Calendar Event
+  sync_calendar:
+    name: Sync Calendar
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Post to Google Calendar
-        uses: stancic/create-google-calendar-event@v1.2.1
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          service_account_client_email: ${{ secrets.SERVICE_ACCOUNT_CLIENT_EMAIL }}
-          service_account_client_private_key: ${{ secrets.SERVICE_ACCOUNT_CLIENT_PRIVATE_KEY }}
-          calendar_id: ${{ secrets.GOOGLE_CALENDAR_ID }}
-          summary: "hoi"
-          description: "body"
+          python-version: "3.x"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Notion to Google Calendar Sync
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.SERVICE_ACCOUNT_CLIENT_PRIVATE_KEY }}
+        run: |
+          python sync_calendar.py
