@@ -6,7 +6,6 @@ on:
 #on:
 #  schedule:
 #    - cron: "*/5 * * * *" # Runs every 5 minutes
-
 jobs:
   sync_calendar:
     name: Sync Calendar

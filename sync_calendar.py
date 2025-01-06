@@ -63,4 +63,3 @@ def post_to_google_calendar(events):
 if __name__ == "__main__":
     notion_events = fetch_notion_events()
     post_to_google_calendar(notion_events)
-
