@@ -3,7 +3,7 @@ import os
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 import requests
-  
+ 
 # Load environment variables
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
@@ -30,20 +30,29 @@ def get_google_calendar_service():
 # Fetch events from Notion database
 def fetch_notion_events():
     url = f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query"
-    print("Headers being sent:", NOTION_HEADERS)
-    try:
-        response = requests.post(url, headers=NOTION_HEADERS)
-        response.raise_for_status()  # Raise an HTTPError for bad responses
-        data = response.json()
+    response = requests.post(url, headers=NOTION_HEADERS)
+    response.raise_for_status()
+    data = response.json()
+    events = []
 
-        # Print the full response for debugging
-        print("Data received from Notion:", json.dumps(data, indent=4))
-        return []
-    except requests.exceptions.RequestException as e:
-        print("Error fetching Notion events:", e)
-        raise
+    # Parse events from Notion database
+    for result in data.get("results", []):
+        props = result.get("properties", {})
+        title = props.get("Name", {}).get("title", [{}])[0].get("text", {}).get("content", "No Title")
+        date = props.get("due date", {}).get("date", {}).get("start")  # Updated key to match "due date"
+        description = ""
+        rich_text = props.get("description", {}).get("rich_text", [])
+        if rich_text:
+            description = rich_text[0].get("text", {}).get("content", "")
 
-
+        if title and date:
+            events.append({
+                "summary": title,
+                "start": date,
+                "end": date,
+                "description": description
+            })
+    return events
 
 # Fetch existing events from Google Calendar
 def fetch_google_calendar_events():
