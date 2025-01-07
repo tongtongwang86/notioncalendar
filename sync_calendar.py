@@ -3,7 +3,7 @@ import os
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 import requests
- 
+
 # Load environment variables
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
@@ -27,32 +27,59 @@ def get_google_calendar_service():
     service = build('calendar', 'v3', credentials=credentials)
     return service
 
+# Parse events from Notion API response
+def parse_notion_events(notion_data):
+    events = []
+    for page in notion_data.get("results", []):
+        properties = page.get("properties", {})
+
+        # Extract title
+        title = (
+            properties.get("Name", {})
+            .get("title", [{}])[0]
+            .get("text", {})
+            .get("content", "Untitled Event")
+        )
+
+        # Extract description
+        description = "".join(
+            part.get("text", {}).get("content", "")
+            for part in properties.get("description", {}).get("rich_text", [])
+        )
+
+        # Extract due date with error handling
+        due_date = properties.get("due date")
+        start_date = None
+        if due_date and isinstance(due_date, dict) and due_date.get("date"):
+            start_date = due_date["date"].get("start", None)
+
+        # Extract type
+        event_type = (
+            properties.get("Type", {})
+            .get("select", {})
+            .get("name", "Uncategorized")
+        )
+
+        # Only include events with a valid start date
+        if start_date:
+            events.append({
+                "summary": title,
+                "start": start_date,
+                "end": start_date,
+                "description": description,
+                "type": event_type,
+            })
+    return events
+
 # Fetch events from Notion database
 def fetch_notion_events():
     url = f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query"
     response = requests.post(url, headers=NOTION_HEADERS)
     response.raise_for_status()
     data = response.json()
-    events = []
 
-    # Parse events from Notion database
-    for result in data.get("results", []):
-        props = result.get("properties", {})
-        title = props.get("Name", {}).get("title", [{}])[0].get("text", {}).get("content", "No Title")
-        date = props.get("due date", {}).get("date", {}).get("start")  # Updated key to match "due date"
-        description = ""
-        rich_text = props.get("description", {}).get("rich_text", [])
-        if rich_text:
-            description = rich_text[0].get("text", {}).get("content", "")
-
-        if title and date:
-            events.append({
-                "summary": title,
-                "start": date,
-                "end": date,
-                "description": description
-            })
-    return events
+    # Parse events using the updated parser
+    return parse_notion_events(data)
 
 # Fetch existing events from Google Calendar
 def fetch_google_calendar_events():
