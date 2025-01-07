@@ -30,29 +30,35 @@ def get_google_calendar_service():
 # Fetch events from Notion database
 def fetch_notion_events():
     url = f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query"
-    response = requests.post(url, headers=NOTION_HEADERS)
-    response.raise_for_status()
-    data = response.json()
-    events = []
+    try:
+        response = requests.post(url, headers=NOTION_HEADERS)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        data = response.json()
 
-    # Parse events from Notion database
-    for result in data.get("results", []):
-        props = result.get("properties", {})
-        title = props.get("Name", {}).get("title", [{}])[0].get("text", {}).get("content", "No Title")
-        date = props.get("due date", {}).get("date", {}).get("start")  # Updated key to match "due date"
-        description = ""
-        rich_text = props.get("description", {}).get("rich_text", [])
-        if rich_text:
-            description = rich_text[0].get("text", {}).get("content", "")
+        # Print the full data received from Notion for debugging
+        print("Data received from Notion:", json.dumps(data, indent=4))
 
-        if title and date:
-            events.append({
-                "summary": title,
-                "start": date,
-                "end": date,
-                "description": description
-            })
-    return events
+        events = []
+        for result in data.get("results", []):
+            props = result.get("properties", {})
+            title = props.get("Name", {}).get("title", [{}])[0].get("text", {}).get("content", "No Title")
+            date = props.get("due date", {}).get("date", {}).get("start")
+            description = "".join(
+                rt.get("text", {}).get("content", "") for rt in props.get("description", {}).get("rich_text", [])
+            )
+
+            if title and date:
+                events.append({
+                    "summary": title,
+                    "start": date,
+                    "end": date,
+                    "description": description,
+                })
+        return events
+    except requests.exceptions.RequestException as e:
+        print("Error fetching Notion events:", e)
+        raise
+
 
 # Fetch existing events from Google Calendar
 def fetch_google_calendar_events():
